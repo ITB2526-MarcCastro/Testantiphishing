@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Test Anti-Phishing · Mòdul 0378</title>
+<style>
+  :root{
+    --bg:#f6f5f1;
+    --surface:#ffffff;
+    --ink:#1c2321;
+    --ink-soft:#5b645f;
+    --line:#dedad0;
+    --accent:#2f5d50;
+    --accent-ink:#ffffff;
+    --danger:#a23b2e;
+    --danger-bg:#fbeae6;
+    --ok:#2f6b4f;
+    --ok-bg:#e8f1ea;
+    --chip-bg:#eceae2;
+    --phone-bg:#15181a;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#14171a;
+      --surface:#1d2124;
+      --ink:#ecebe6;
+      --ink-soft:#a5ada7;
+      --line:#2d3236;
+      --accent:#5fae92;
+      --accent-ink:#0c1210;
+      --danger:#e2847a;
+      --danger-bg:#2b1b19;
+      --ok:#7fc9a3;
+      --ok-bg:#142b20;
+      --chip-bg:#262b2e;
+      --phone-bg:#0c0e0f;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#14171a;
+    --surface:#1d2124;
+    --ink:#ecebe6;
+    --ink-soft:#a5ada7;
+    --line:#2d3236;
+    --accent:#5fae92;
+    --accent-ink:#0c1210;
+    --danger:#e2847a;
+    --danger-bg:#2b1b19;
+    --ok:#7fc9a3;
+    --ok-bg:#142b20;
+    --chip-bg:#262b2e;
+    --phone-bg:#0c0e0f;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-padding-top:env(safe-area-inset-top,0px);}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:"Iowan Old Style","Georgia",ui-serif,serif;
+    padding-top:env(safe-area-inset-top,0px);
+    padding-bottom:calc(env(safe-area-inset-bottom,0px) + 32px);
+  }
+  .wrap{max-width:720px;margin:0 auto;padding:28px 20px 60px;}
+  header.top{
+    display:flex; justify-content:space-between; align-items:flex-start; gap:12px;
+    margin-bottom:22px;
+  }
+  .eyebrow{
+    font-family:ui-monospace,"SF Mono",Menlo,monospace;
+    font-size:12.5px; letter-spacing:.04em; color:var(--ink-soft);
+  }
+  h1{font-size:clamp(28px,5vw,38px); line-height:1.1; margin:6px 0 10px; font-weight:600;}
+  p.lede{color:var(--ink-soft); font-size:16px; line-height:1.55; max-width:56ch;}
+  .score-row{display:flex; gap:12px; margin:22px 0 28px;}
+  .score-card{
+    flex:1; background:var(--surface); border:1px solid var(--line); border-radius:14px;
+    padding:14px 16px;
+  }
+  .score-num{font-size:28px; font-weight:600;}
+  .score-label{font-size:13px; color:var(--ink-soft); font-family:ui-sans-serif,system-ui,sans-serif;}
+  .progress-track{height:5px; background:var(--chip-bg); border-radius:4px; overflow:hidden; margin-bottom:28px;}
+  .progress-fill{height:100%; background:var(--accent); width:0%; transition:width .4s ease;}
+
+  .case{
+    background:var(--surface); border:1px solid var(--line); border-radius:18px;
+    padding:22px; margin-bottom:22px;
+  }
+  .case-head{display:flex; align-items:center; gap:10px; margin-bottom:10px; font-family:ui-sans-serif,system-ui,sans-serif;}
+  .case-num{font-size:13px; color:var(--ink-soft);}
+  .chip{
+    font-size:12px; padding:3px 10px; border-radius:999px; background:var(--chip-bg);
+    color:var(--ink-soft); font-family:ui-sans-serif,system-ui,sans-serif;
+  }
+  .case h2{font-size:21px; margin:0 0 16px; font-weight:600;}
+
+  .mock{display:flex; justify-content:center; margin-bottom:18px;}
+  .phone{
+    width:270px; border-radius:30px; background:var(--phone-bg); padding:10px;
+    box-shadow:0 10px 30px rgba(0,0,0,.18);
+  }
+  .phone-screen{
+    background:#fff; border-radius:21px; overflow:hidden; font-family:ui-sans-serif,system-ui,sans-serif;
+    min-height:220px;
+  }
+  .phone-status{display:flex; justify-content:space-between; padding:8px 14px 2px; font-size:11px; color:#333;}
+  .card-mock{width:100%; max-width:420px;}
+  .mail-head{background:#161a1d; color:#fff; font-size:13px; padding:10px 14px; font-family:ui-sans-serif,system-ui,sans-serif;}
+  .mail-body{padding:14px; font-size:13.5px; font-family:ui-sans-serif,system-ui,sans-serif; color:#20242a; background:#f4f3f0;}
+  .mail-meta{color:#80867f; font-size:12px; margin-bottom:8px;}
+  .mail-warn{color:#a23b2e; font-weight:600; font-size:14px; margin:6px 0;}
+  .btn-mock{display:inline-block; padding:9px 16px; border-radius:7px; font-size:13px; font-weight:600; margin:8px 0 6px; color:#fff;}
+  .btn-red{background:#c0392b;}
+  .btn-blue{background:#2d6cdf;}
+  .btn-green{background:#2f8a52;}
+  .link-real{font-size:11.5px; color:#8a9088; word-break:break-all;}
+
+  .sms-bubble{background:#e9e9eb; border-radius:14px; padding:10px 12px; font-size:13.5px; margin:6px 0; color:#1c1c1e; font-family:ui-sans-serif,system-ui,sans-serif;}
+  .wa-wrap{background:#e9ddcf; padding:14px; font-family:ui-sans-serif,system-ui,sans-serif;}
+  .wa-head{background:#1f4a3d; color:#fff; padding:8px 12px; font-size:13px; border-radius:8px 8px 0 0; margin:-14px -14px 10px;}
+  .wa-bubble{background:#fff; border-radius:10px; padding:9px 11px; font-size:13.5px; margin-bottom:8px; color:#1c1c1e;}
+  .wa-urgent{color:#a23b2e; font-weight:600;}
+
+  .post-wrap{font-family:ui-sans-serif,system-ui,sans-serif;}
+  .post-head{background:#2d6cdf; color:#fff; padding:9px 14px; font-size:13px;}
+  .post-body{padding:12px 14px;}
+  .post-author{display:flex; gap:8px; align-items:center; margin-bottom:8px;}
+  .avatar{width:30px; height:30px; border-radius:999px; background:#c7c7cc;}
+  .post-name{font-size:13px; font-weight:600;}
+  .post-sub{font-size:11px; color:#80867f;}
+  .post-text{font-size:13.5px; margin:8px 0;}
+  .post-highlight{background:#f5e08c; padding:14px; text-align:center; border-radius:6px; font-weight:700; color:#5c4813; margin:8px 0;}
+  .post-stats{font-size:11.5px; color:#80867f; margin-top:6px;}
+
+  .qr-poster{background:#1f3a5f; padding:18px; border-radius:6px; text-align:center; color:#fff; font-family:ui-sans-serif,system-ui,sans-serif;}
+  .qr-poster .inner{background:#fff; color:#1c2321; border-radius:4px; padding:16px;}
+  .qr-grid{width:120px; height:120px; margin:12px auto; background:
+    repeating-linear-gradient(90deg,#000 0 6px,#fff 6px 12px),
+    repeating-linear-gradient(0deg,#000 0 6px,transparent 6px 12px);
+    background-blend-mode:multiply;
+  }
+  .qr-domain{font-size:11px; color:#80867f;}
+  .qr-cta{color:#a23b2e; font-weight:600; font-size:12.5px; margin-top:4px;}
+
+  .push-screen{background:#0c0e0f; color:#fff; text-align:center; padding:26px 16px; font-family:ui-sans-serif,system-ui,sans-serif;}
+  .push-clock{font-size:34px; font-weight:300;}
+  .push-date{font-size:12px; opacity:.7; margin-bottom:16px;}
+  .push-card{background:rgba(255,255,255,.12); border-radius:12px; padding:10px 12px; text-align:left; font-size:12.5px;}
+  .push-title{font-weight:600; display:flex; justify-content:space-between;}
+  .push-sub{opacity:.7; font-size:11.5px; margin-top:2px;}
+
+  .answers{display:flex; gap:10px; margin-top:4px;}
+  .answer-btn{
+    flex:1; padding:13px; border-radius:12px; border:1px solid var(--line);
+    background:var(--surface); color:var(--ink); font-size:15px; font-weight:600;
+    cursor:pointer; font-family:ui-sans-serif,system-ui,sans-serif;
+    transition:border-color .15s ease, background .15s ease;
+  }
+  .answer-btn:hover{border-color:var(--accent);}
+  .answer-btn:disabled{cursor:default;}
+  .answer-btn.chosen-correct{background:var(--ok-bg); border-color:var(--ok); color:var(--ok);}
+  .answer-btn.chosen-wrong{background:var(--danger-bg); border-color:var(--danger); color:var(--danger);}
+  .answer-btn.reveal-correct{border-color:var(--ok); color:var(--ok);}
+
+  .feedback{
+    margin-top:16px; padding:14px 16px; border-radius:12px; font-size:14.5px; line-height:1.5;
+    font-family:ui-sans-serif,system-ui,sans-serif; display:none;
+  }
+  .feedback.show{display:block;}
+  .feedback.ok{background:var(--ok-bg); color:var(--ok);}
+  .feedback.bad{background:var(--danger-bg); color:var(--danger);}
+  .feedback b{display:block; margin-bottom:4px; font-size:14px;}
+  .feedback .signals{color:var(--ink); font-weight:400;}
+
+  .summary{
+    background:var(--surface); border:1px solid var(--line); border-radius:18px;
+    padding:26px; text-align:center; display:none;
+  }
+  .summary.show{display:block;}
+  .summary .big{font-size:40px; font-weight:600; margin-bottom:4px;}
+  .restart{
+    margin-top:16px; padding:10px 20px; border-radius:999px; border:1px solid var(--accent);
+    background:var(--accent); color:var(--accent-ink); font-weight:600; font-size:14px;
+    cursor:pointer; font-family:ui-sans-serif,system-ui,sans-serif;
+  }
+  footer{text-align:center; color:var(--ink-soft); font-size:12.5px; margin-top:30px; font-family:ui-sans-serif,system-ui,sans-serif;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div>
+      <div class="eyebrow">Mòdul 0378 · Enginyeria Social</div>
+      <h1>Test anti‑phishing</h1>
+      <p class="lede">10 situacions reals, de canals diferents. Algunes són intents de phishing i d'altres són comunicacions legítimes. Decideix cas per cas i llegeix les senyals d'alarma.</p>
+    </div>
+  </header>
+
+  <div class="score-row">
+    <div class="score-card">
+      <div class="score-num" id="scoreCorrect">0/10</div>
+      <div class="score-label">Encertades</div>
+    </div>
+    <div class="score-card">
+      <div class="score-num" id="scoreDone">0/10</div>
+      <div class="score-label">Casos completats</div>
+    </div>
+  </div>
+
+  <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+
+  <div id="cases"></div>
+
+  <div class="summary" id="summary">
+    <div class="eyebrow">Resultat final</div>
+    <div class="big" id="finalScore">0/10</div>
+    <div id="finalMsg" style="color:var(--ink-soft); font-family:ui-sans-serif,system-ui,sans-serif;"></div>
+    <button class="restart" id="restartBtn">Tornar a començar</button>
+  </div>
+
+  <footer>Material didàctic — CFGS ASIX2c, Mòdul 0378-SEGURETAT</footer>
+</div>
+
+<script>
+const cases = [
+  {
+    channel: "Xarxa social", title: "Publicació de sorteig", isPhishing: true,
+    mock: `<div class="post-wrap card-mock">
+      <div class="post-head">RedSocial</div>
+      <div class="post-body">
+        <div class="post-author"><div class="avatar"></div><div><div class="post-name">Super Promos Oficial</div><div class="post-sub">Pàgina patrocinada · fa 2h</div></div></div>
+        <div class="post-text">🎊 SORTEIG ESPECIAL 🎊<br>Hem escollit 50 guanyadors a l'atzar. El teu perfil podria ser-ne un!</div>
+        <div class="post-highlight">HAS ESTAT SELECCIONAT!</div>
+        <div class="btn-mock btn-blue">RECLAMAR PREMI ARA</div>
+        <div class="link-real">redsocial-premios-oficial.verify-gift.ru/claim</div>
+        <div class="qr-cta">⚠ Oferta vàlida només 15 minuts</div>
+        <div class="post-stats">1,2k · 340 comentaris · 890 compartits</div>
+      </div></div>`,
+    explanation: "Domini fals de dues capes (<b>verify-gift.ru</b> després d'un subdomini que imita la marca), urgència artificial (15 minuts) i un premi que no has sol·licitat. Les pàgines oficials no fan sortejos aleatoris via anunci patrocinat amb dominis .ru desconeguts."
+  },
+  {
+    channel: "Email", title: "Alerta bancària urgent", isPhishing: true,
+    mock: `<div class="card-mock">
+      <div class="mail-head">📧 Safata d'entrada</div>
+      <div class="mail-body">
+        <div class="mail-meta">De: Seguretat BancoNet &lt;alertas@bancoonline-secure-es.com&gt;<br>Per a: usuari@correu.com</div>
+        <div class="mail-warn">⚠ Activitat inusual detectada</div>
+        <p>Hem detectat un intent d'accés no autoritzat des d'un dispositiu desconegut. Per la teva seguretat, el teu compte ha estat restringit temporalment.</p>
+        <p><b>Has de verificar la teva identitat en les properes 24 hores, o el compte serà bloquejat permanentment.</b></p>
+        <div class="btn-mock btn-red">VERIFICAR EL MEU COMPTE</div>
+        <div class="link-real">Enllaç real en passar el ratolí: http://192.168.1.134/verify-bancoonline</div>
+      </div></div>`,
+    explanation: "El domini <b>bancoonline-secure-es.com</b> no és el domini oficial de cap banc real (afegeix paraules com \"secure\" per semblar fiable). L'enllaç real apunta a una adreça IP interna, no al banc. Amenaça de bloqueig + termini curt = pressió clàssica de phishing."
+  },
+  {
+    channel: "SMS", title: "Paquet retingut a duana", isPhishing: true,
+    mock: `<div class="card-mock">
+      <div class="phone"><div class="phone-screen">
+        <div class="phone-status"><span>9:41</span><span>100%</span></div>
+        <div style="padding:10px 14px; font-family:ui-sans-serif,system-ui,sans-serif;">
+          <div style="font-size:12px; color:#666; margin-bottom:8px;">+34 644 90 12 33</div>
+          <div class="sms-bubble">CorreoExpress: El teu paquet #ES449021 està retingut a duana. Paga 1,99€ de gestió per alliberar-lo: <span style="color:#2d6cdf;">correoexpress-tracking.info/es</span></div>
+          <div style="font-size:10px; color:#999; text-align:right;">10:42</div>
+        </div>
+      </div></div></div>`,
+    explanation: "\"Smishing\" clàssic: un import petit i plausible (1,99€) perquè la víctima no s'ho pensi, i un domini .info que no coincideix amb cap empresa de missatgeria real. Les empreses de paqueteria no cobren \"gestions\" per SMS amb enllaços genèrics."
+  },
+  {
+    channel: "WhatsApp", title: "Familiar amb número nou", isPhishing: true,
+    mock: `<div class="card-mock"><div class="phone"><div class="phone-screen">
+      <div class="wa-wrap">
+        <div class="wa-head">👤 Número desconegut · en línia</div>
+        <div class="wa-bubble">Hola mama, soc jo, he canviat de número perquè se'm va trencar el mòbil. Guarda'm en aquest número porfa 🙏</div>
+        <div class="wa-bubble">Necessito que em facis un favor urgent, he de pagar una cosa i la targeta no em funciona. Em pots fer un bizum de 300€? <span class="wa-urgent">T'ho explico després, és urgent!!</span></div>
+      </div>
+    </div></div></div>`,
+    explanation: "El \"timo del fill/familiar\": un número desconegut diu ser un familiar que ha canviat de mòbil i demana diners urgentment, evitant trucar per veu (per no ser descobert). Davant d'això, cal verificar trucant al número habitual del familiar abans de fer cap pagament."
+  },
+  {
+    channel: "Codi QR", title: "Cartell de pagament de pàrquing", isPhishing: true,
+    mock: `<div class="card-mock"><div class="qr-poster"><div class="inner">
+      <div style="font-weight:700; font-size:18px;">PÀRQUING</div>
+      <div style="font-size:12px; color:#666; margin:4px 0;">Pagament ràpid amb el mòbil</div>
+      <div class="qr-grid"></div>
+      <div style="font-size:12px; font-weight:600;">Escaneja el codi per pagar el tiquet en 1 minut</div>
+      <div class="qr-domain">parking-pay-quick.site/ticket8834</div>
+      <div class="qr-cta">Evita multes · Paga abans de sortir</div>
+    </div></div></div>`,
+    explanation: "\"Quishing\": un codi QR enganxat sobre un cartell legítim que porta a un domini genèric (.site) sense relació amb l'operador real del pàrquing. Abans d'escanejar un QR en un espai públic, cal comprovar que no estigui enganxat sobre un altre i mirar la URL abans de pagar."
+  },
+  {
+    channel: "Newsletter", title: "Cupó de descompte", isPhishing: false,
+    mock: `<div class="card-mock">
+      <div class="mail-head">📧 Safata d'entrada</div>
+      <div class="mail-body">
+        <div class="mail-meta">De: Tienda Moda &lt;newsletter@tiendamoda.es&gt;<br>Per a: usuari@correu.com</div>
+        <p><b>15% de descompte per a tu aquesta setmana</b></p>
+        <p>Com a agraïment per ser client habitual, et regalem un 15% de descompte en la teva propera compra. Vàlid fins a final de mes.</p>
+        <div class="btn-mock btn-green">VEURE OFERTES</div>
+        <div class="link-real">Enllaç real en passar el ratolí: https://www.tiendamoda.es/ofertas</div>
+        <p style="font-size:11.5px; color:#80867f;">Donar-se de baixa | tiendamoda.es | Política de privacitat</p>
+      </div></div>`,
+    explanation: "Legítim: el remitent i l'enllaç real coincideixen amb el mateix domini (tiendamoda.es), no hi ha amenaça ni urgència desproporcionada, i inclou l'opció de baixa i política de privacitat, com exigeix la normativa de màrqueting per correu."
+  },
+  {
+    channel: "Instagram (DM)", title: "Oferta de col·laboració de marca", isPhishing: true,
+    mock: `<div class="card-mock"><div class="phone"><div class="phone-screen">
+      <div style="padding:10px 14px; font-family:ui-sans-serif,system-ui,sans-serif;">
+        <div class="post-author"><div class="avatar"></div><div><div class="post-name">beauty.oficial.marca</div><div class="post-sub">Compte d'empresa</div></div></div>
+        <div class="post-text">Hola! Hem vist el teu perfil i ens encantaria col·laborar amb tu 💄 T'enviem productes gratis + 150€ si completes el registre d'ambaixadora aquí:<br><span style="color:#2d6cdf;">forms-embajadoras.net/reg</span></div>
+        <div class="qr-cta">Només queden 3 places avui!</div>
+      </div>
+    </div></div></div>`,
+    explanation: "Les marques reals no capten \"ambaixadores\" per DM no sol·licitat amb un formulari extern (forms-embajadoras.net) desvinculat del seu domini oficial. El pagament en metàl·lic per \"completar un registre\" i la urgència (\"3 places\") són senyals clares d'enginyeria social."
+  },
+  {
+    channel: "Email", title: "Confirmació de comanda", isPhishing: false,
+    mock: `<div class="card-mock">
+      <div class="mail-head">📧 Safata d'entrada</div>
+      <div class="mail-body">
+        <div class="mail-meta">De: Pedidos TiendaOnline &lt;pedidos@tiendaonline.com&gt;<br>Per a: usuari@correu.com</div>
+        <p><b>La teva comanda #203-5581942 ha estat confirmada</b></p>
+        <p>Gràcies per la teva compra. Hem rebut la teva comanda i l'estem preparant. Arribarà en 2-4 dies. Total: 34,90€ | 1 article</p>
+        <div class="btn-mock btn-blue">VEURE LA MEVA COMANDA</div>
+        <div class="link-real">Enllaç real en passar el ratolí: https://www.tiendaonline.com/pedidos/2035581942</div>
+        <p style="font-size:11.5px; color:#80867f;">Aquest correu s'ha enviat perquè has fet una compra recent.</p>
+      </div></div>`,
+    explanation: "Legítim si realment has fet la compra: el domini del remitent i de l'enllaç coincideixen, no hi ha pressió ni petició de dades sensibles, i la informació (número de comanda, import) és verificable des del teu propi compte sense fer clic a res."
+  },
+  {
+    channel: "Notificació push", title: "Alerta d'inici de sessió", isPhishing: false,
+    mock: `<div class="card-mock"><div class="phone"><div class="phone-screen">
+      <div class="push-screen">
+        <div class="push-clock">09:41</div>
+        <div class="push-date">Dilluns, 16 de novembre</div>
+        <div class="push-card">
+          <div class="push-title"><span>🔒 Compte Correu</span><span>ara</span></div>
+          <div>Nou inici de sessió detectat</div>
+          <div class="push-sub">Windows · Madrid, Espanya · fa 1 min</div>
+          <div class="push-sub">Toca per revisar l'activitat del teu compte</div>
+        </div>
+      </div>
+    </div></div></div>`,
+    explanation: "Legítim i recomanable: és una notificació generada pel propi sistema operatiu/proveïdor de correu (no un enllaç extern per correu o SMS), informa sense amenaçar i et convida a revisar-ho dins de l'app oficial. És exactament el comportament que hauria de tenir un avís de seguretat real."
+  },
+  {
+    channel: "Xarxa social", title: "Invitació a un esdeveniment", isPhishing: false,
+    mock: `<div class="post-wrap card-mock">
+      <div class="post-head">RedSocial</div>
+      <div class="post-body">
+        <div class="post-author"><div class="avatar"></div><div><div class="post-name">Laura Martínez</div><div class="post-sub">t'ha convidat a un esdeveniment · fa 1 dia</div></div></div>
+        <div class="post-highlight" style="background:#dff3e4; color:#2f6b4f;">Cumpleanys de Laura 🎂<br><span style="font-weight:400; font-size:12px;">Dissabte 21 nov · 20:00h · Casa de Laura</span></div>
+        <div style="display:flex; gap:8px; margin-top:6px;">
+          <div class="btn-mock btn-blue" style="margin:0;">Assistiré</div>
+          <div class="btn-mock" style="margin:0; background:#e0e0e0; color:#333;">Potser</div>
+        </div>
+        <div class="post-stats">24 confirmacions · 8 comentaris</div>
+      </div></div>`,
+    explanation: "Legítim: ve d'un contacte real i conegut (Laura Martínez), no conté cap enllaç extern, no demana dades ni pagaments, i la invitació és del tipus habitual d'una xarxa social (confirmar assistència dins de la pròpia plataforma)."
+  }
+];
+
+let current = 0, correct = 0, done = 0;
+const casesEl = document.getElementById('cases');
+const scoreCorrect = document.getElementById('scoreCorrect');
+const scoreDone = document.getElementById('scoreDone');
+const progressFill = document.getElementById('progressFill');
+const summary = document.getElementById('summary');
+
+function renderCase(index){
+  const c = cases[index];
+  const el = document.createElement('div');
+  el.className = 'case';
+  el.id = 'case-' + index;
+  el.innerHTML = `
+    <div class="case-head">
+      <span class="case-num">Cas ${index+1} de ${cases.length}</span>
+      <span class="chip">${c.channel}</span>
+    </div>
+    <h2>${c.title}</h2>
+    <div class="mock">${c.mock}</div>
+    <div style="font-family:ui-sans-serif,system-ui,sans-serif; font-weight:600; margin-bottom:10px;">És això un intent de phishing?</div>
+    <div class="answers">
+      <button class="answer-btn" data-choice="true">Sí, és phishing</button>
+      <button class="answer-btn" data-choice="false">No, és legítim</button>
+    </div>
+    <div class="feedback" id="feedback-${index}"></div>
+  `;
+  casesEl.appendChild(el);
+
+  const buttons = el.querySelectorAll('.answer-btn');
+  buttons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const choice = btn.dataset.choice === 'true';
+      buttons.forEach(b => b.disabled = true);
+      const isRight = choice === c.isPhishing;
+      if(isRight){
+        btn.classList.add('chosen-correct');
+        correct++;
+      } else {
+        btn.classList.add('chosen-wrong');
+        buttons.forEach(b => { if(b.dataset.choice === String(c.isPhishing)) b.classList.add('reveal-correct'); });
+      }
+      done++;
+      updateScore();
+      const fb = document.getElementById('feedback-' + index);
+      fb.classList.add('show', isRight ? 'ok' : 'bad');
+      fb.innerHTML = `<b>${isRight ? 'Correcte.' : 'Incorrecte.'} ${c.isPhishing ? 'Això és phishing.' : 'Això és legítim.'}</b><span class="signals">${c.explanation}</span>`;
+      if(done === cases.length){
+        setTimeout(showSummary, 400);
+      } else {
+        const next = document.getElementById('case-' + (index+1));
+        if(next) setTimeout(() => next.scrollIntoView({behavior:'smooth', block:'start'}), 500);
+      }
+    });
+  });
+}
+
+function updateScore(){
+  scoreCorrect.textContent = `${correct}/${cases.length}`;
+  scoreDone.textContent = `${done}/${cases.length}`;
+  progressFill.style.width = (done / cases.length * 100) + '%';
+}
+
+function showSummary(){
+  document.getElementById('finalScore').textContent = `${correct}/${cases.length}`;
+  const msg = document.getElementById('finalMsg');
+  if(correct === cases.length) msg.textContent = 'Perfecte. Has detectat totes les senyals d\'alarma.';
+  else if(correct >= cases.length*0.7) msg.textContent = 'Molt bé. Revisa les explicacions dels casos que has fallat.';
+  else msg.textContent = 'Val la pena repassar les senyals clàssiques de phishing abans de tornar-ho a intentar.';
+  summary.classList.add('show');
+  summary.scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+document.getElementById('restartBtn').addEventListener('click', () => {
+  current = 0; correct = 0; done = 0;
+  casesEl.innerHTML = '';
+  summary.classList.remove('show');
+  updateScore();
+  cases.forEach((_, i) => renderCase(i));
+  window.scrollTo({top:0, behavior:'smooth'});
+});
+
+cases.forEach((_, i) => renderCase(i));
+</script>
+</body>
+</html>
